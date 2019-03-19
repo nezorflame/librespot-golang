@@ -31,7 +31,7 @@ type AudioFile struct {
 	size           uint32
 	lock           sync.RWMutex
 	format         spotify.AudioFile_Format
-	fileId         []byte
+	fileID         []byte
 	player         *Player
 	cipher         cipher.Block
 	decrypter      *AudioFileDecrypter
@@ -48,10 +48,10 @@ func newAudioFile(file *spotify.AudioFile, player *Player) *AudioFile {
 	return newAudioFileWithIdAndFormat(file.GetFileId(), file.GetFormat(), player)
 }
 
-func newAudioFileWithIdAndFormat(fileId []byte, format spotify.AudioFile_Format, player *Player) *AudioFile {
+func newAudioFileWithIdAndFormat(fileID []byte, format spotify.AudioFile_Format, player *Player) *AudioFile {
 	return &AudioFile{
 		player:        player,
-		fileId:        fileId,
+		fileID:        fileID,
 		format:        format,
 		decrypter:     NewAudioFileDecrypter(),
 		size:          kChunkSize, // Set an initial size to fetch the first chunk regardless of the actual size
@@ -187,8 +187,8 @@ func (a *AudioFile) hasChunk(index int) bool {
 	return has && ok
 }
 
-func (a *AudioFile) loadKey(trackId []byte) error {
-	key, err := a.player.loadTrackKey(trackId, a.fileId)
+func (a *AudioFile) loadKey(trackID []byte) error {
+	key, err := a.player.loadTrackKey(trackID, a.fileID)
 	if err != nil {
 		fmt.Printf("[audiofile] Unable to load key: %s\n", err)
 		return err
@@ -252,7 +252,7 @@ func (a *AudioFile) loadChunk(chunkIndex int) error {
 
 	chunkOffsetStart := uint32(chunkIndex * kChunkSize)
 	chunkOffsetEnd := uint32((chunkIndex + 1) * kChunkSize)
-	err := a.player.stream.SendPacket(connection.PacketStreamChunk, buildAudioChunkRequest(channel.num, a.fileId, chunkOffsetStart, chunkOffsetEnd))
+	err := a.player.stream.SendPacket(connection.PacketStreamChunk, buildAudioChunkRequest(channel.num, a.fileID, chunkOffsetStart, chunkOffsetEnd))
 
 	if err != nil {
 		return err

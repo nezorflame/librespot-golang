@@ -22,7 +22,7 @@ message Artist {
   repeated AlbumGroup compilation_group = 0x7;
   repeated AlbumGroup appears_on_group = 0x8;
   repeated string genre = 0x9;
-  repeated ExternalId external_id = 0xa;
+  repeated ExternalID external_id = 0xa;
   repeated Image portrait = 0xb;
   repeated Biography biography = 0xc;
   repeated ActivityPeriod activity_period = 0xd;
@@ -58,7 +58,7 @@ message Album {
   optional sint32 popularity = 0x7;
   repeated string genre = 0x8;
   repeated Image cover = 0x9;
-  repeated ExternalId external_id = 0xa;
+  repeated ExternalID external_id = 0xa;
   repeated Disc disc = 0xb;
   repeated string review = 0xc;
   repeated Copyright copyright = 0xd;
@@ -78,7 +78,7 @@ message Track {
   optional sint32 duration = 0x7;
   optional sint32 popularity = 0x8;
   optional bool explicit = 0x9;
-  repeated ExternalId external_id = 0xa;
+  repeated ExternalID external_id = 0xa;
   repeated Restriction restriction = 0xb;
   repeated AudioFile file = 0xc;
   repeated Track alternative = 0xd;
@@ -138,7 +138,7 @@ message SalePeriod {
   optional Date end = 0x3;
 }
 
-message ExternalId {
+message ExternalID {
   optional string typ = 0x1;
   optional string id = 0x2;
 }

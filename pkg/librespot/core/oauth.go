@@ -16,12 +16,12 @@ type OAuth struct {
 	Error        string
 }
 
-func GetOauthAccessToken(code string, redirectUri string, clientId string, clientSecret string) (*OAuth, error) {
+func GetOauthAccessToken(code string, redirectUri string, clientID string, clientSecret string) (*OAuth, error) {
 	val := url.Values{}
 	val.Set("grant_type", "authorization_code")
 	val.Set("code", code)
 	val.Set("redirect_uri", redirectUri)
-	val.Set("client_id", clientId)
+	val.Set("client_id", clientID)
 	val.Set("client_secret", clientSecret)
 
 	resp, err := http.PostForm("https://accounts.spotify.com/api/token", val)
@@ -50,12 +50,12 @@ func GetOauthAccessToken(code string, redirectUri string, clientId string, clien
 	return &auth, nil
 }
 
-func getOAuthToken(clientId string, clientSecret string) OAuth {
+func getOAuthToken(clientID string, clientSecret string) OAuth {
 	ch := make(chan OAuth)
 
 	fmt.Println("go to this url")
 	urlPath := "https://accounts.spotify.com/authorize?" +
-		"client_id=" + clientId +
+		"client_id=" + clientID +
 		"&response_type=code" +
 		"&redirect_uri=http://localhost:8888/callback" +
 		"&scope=streaming"
@@ -63,7 +63,7 @@ func getOAuthToken(clientId string, clientSecret string) OAuth {
 
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		params := r.URL.Query()
-		auth, err := GetOauthAccessToken(params.Get("code"), "http://localhost:8888/callback", clientId, clientSecret)
+		auth, err := GetOauthAccessToken(params.Get("code"), "http://localhost:8888/callback", clientID, clientSecret)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting token %q", err)
 			return

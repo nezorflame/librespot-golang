@@ -151,8 +151,8 @@ func TestLogin(t *testing.T) {
 
 	welcome := &spotify.APWelcome{
 		CanonicalUsername:           proto.String("testUserCanonical"),
-		AccountTypeLoggedIn:         spotify.AccountType_spotify.Enum(),
-		CredentialsTypeLoggedIn:     spotify.AccountType_spotify.Enum(),
+		AccountTypeLoggedIn:         spotify.AccountType_Spotify.Enum(),
+		CredentialsTypeLoggedIn:     spotify.AccountType_Spotify.Enum(),
 		ReusableAuthCredentialsType: spotify.AuthenticationType_AUTHENTICATION_USER_PASS.Enum(),
 		ReusableAuthCredentials:     []byte{0, 1, 2},
 	}

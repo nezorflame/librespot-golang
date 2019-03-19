@@ -36,18 +36,18 @@ func CreatePlayer(conn connection.PacketStream, client *mercury.Client) *Player 
 	}
 }
 
-func (p *Player) LoadTrack(file *spotify.AudioFile, trackId []byte) (*AudioFile, error) {
-	return p.LoadTrackWithIdAndFormat(file.FileId, file.GetFormat(), trackId)
+func (p *Player) LoadTrack(file *spotify.AudioFile, trackID []byte) (*AudioFile, error) {
+	return p.LoadTrackWithIdAndFormat(file.GetFileId(), file.GetFormat(), trackID)
 }
 
-func (p *Player) LoadTrackWithIdAndFormat(fileId []byte, format spotify.AudioFile_Format, trackId []byte) (*AudioFile, error) {
-	// fmt.Printf("[player] Loading track audio key, fileId: %s, trackId: %s\n", utils.ConvertTo62(fileId), utils.ConvertTo62(trackId))
+func (p *Player) LoadTrackWithIdAndFormat(fileID []byte, format spotify.AudioFile_Format, trackID []byte) (*AudioFile, error) {
+	// fmt.Printf("[player] Loading track audio key, fileId: %s, trackId: %s\n", utils.ConvertTo62(fileID), utils.ConvertTo62(trackID))
 
 	// Allocate an AudioFile and a channel
-	audioFile := newAudioFileWithIdAndFormat(fileId, format, p)
+	audioFile := newAudioFileWithIdAndFormat(fileID, format, p)
 
 	// Start loading the audio key
-	err := audioFile.loadKey(trackId)
+	err := audioFile.loadKey(trackID)
 
 	// Then start loading the audio itself
 	audioFile.loadChunks()
@@ -55,12 +55,12 @@ func (p *Player) LoadTrackWithIdAndFormat(fileId []byte, format spotify.AudioFil
 	return audioFile, err
 }
 
-func (p *Player) loadTrackKey(trackId []byte, fileId []byte) ([]byte, error) {
+func (p *Player) loadTrackKey(trackID []byte, fileID []byte) ([]byte, error) {
 	seqInt, seq := p.mercury.NextSeqWithInt()
 
 	p.seqChans.Store(seqInt, make(chan []byte))
 
-	req := buildKeyRequest(seq, trackId, fileId)
+	req := buildKeyRequest(seq, trackID, fileID)
 	err := p.stream.SendPacket(connection.PacketRequestKey, req)
 	if err != nil {
 		log.Println("Error while sending packet", err)

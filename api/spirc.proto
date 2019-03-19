@@ -68,7 +68,7 @@ enum CapabilityType {
   kCanBePlayer = 0x2;
   kRestrictToLocal = 0x3;
   kDeviceType = 0x4;
-  kGaiaEqConnectId = 0x5;
+  kGaiaEqConnectID = 0x5;
   kSupportsLogout = 0x6;
   kIsObservable = 0x7;
   kVolumeSteps = 0x8;

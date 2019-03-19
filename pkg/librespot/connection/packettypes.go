@@ -1,5 +1,6 @@
 package connection
 
+// Packet type consts
 const (
 	PacketSecretBlock    = 0x02
 	PacketPing           = 0x04

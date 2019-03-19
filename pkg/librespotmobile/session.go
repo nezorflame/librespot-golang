@@ -11,27 +11,13 @@ type MobileSession struct {
 	mercury *MobileMercury
 }
 
-func Login(username string, password string, deviceName string) (*MobileSession, error) {
-	sess, err := core.Login(username, password, deviceName)
-
+// NewMobileSession creates new MobileSession
+func NewMobileSession() (*MobileSession, error) {
+	sess, err := core.NewSession()
 	if err != nil {
 		return nil, err
 	}
 
-	return initSessionImpl(sess)
-}
-
-func LoginSaved(username string, authData []byte, deviceName string) (*MobileSession, error) {
-	sess, err := core.LoginSaved(username, authData, deviceName)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return initSessionImpl(sess)
-}
-
-func initSessionImpl(sess *core.Session) (*MobileSession, error) {
 	return &MobileSession{
 		session: sess,
 		player:  createMobilePlayer(sess),
@@ -39,26 +25,42 @@ func initSessionImpl(sess *core.Session) (*MobileSession, error) {
 	}, nil
 }
 
+// Login wraps core.Session Login method
+func (s *MobileSession) Login(username, password, deviceName string) error {
+	return s.session.Login(username, password, deviceName)
+}
+
+// LoginSaved wraps core.Session LoginSaved method
+func (s *MobileSession) LoginSaved(username string, authData []byte, deviceName string) error {
+	return s.session.LoginSaved(username, authData, deviceName)
+}
+
+// Username returns core.Session Username
 func (s *MobileSession) Username() string {
 	return s.session.Username()
 }
 
-func (s *MobileSession) DeviceId() string {
-	return s.session.DeviceId()
+// DeviceID returns core.Session DeviceID
+func (s *MobileSession) DeviceID() string {
+	return s.session.DeviceID()
 }
 
+// ReusableAuthBlob returns core.Session ReusableAuthBlob
 func (s *MobileSession) ReusableAuthBlob() []byte {
 	return s.session.ReusableAuthBlob()
 }
 
+// Country returns core.Session Country
 func (s *MobileSession) Country() string {
 	return s.session.Country()
 }
 
+// Player returns core.Session Player
 func (s *MobileSession) Player() *MobilePlayer {
 	return s.player
 }
 
+// Mercury returns core.Session Mercury
 func (s *MobileSession) Mercury() *MobileMercury {
 	return s.mercury
 }

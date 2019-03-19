@@ -5,7 +5,8 @@ import (
 	"encoding/base64"
 )
 
-func GenerateDeviceId(name string) string {
+// GenerateDeviceID creates new device ID out of its name
+func GenerateDeviceID(name string) string {
 	hash := sha1.Sum([]byte(name))
 	hash64 := base64.StdEncoding.EncodeToString(hash[:])
 	return hash64

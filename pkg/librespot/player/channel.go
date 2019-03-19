@@ -44,14 +44,14 @@ func (c *Channel) handlePacket(data []byte) {
 			// fmt.Printf("[channel] Header part length: %d\n", length)
 
 			if length > 0 {
-				var headerId uint8
-				binary.Read(dataReader, binary.BigEndian, &headerId)
+				var headerID uint8
+				binary.Read(dataReader, binary.BigEndian, &headerID)
 
-				// fmt.Printf("[channel] Header ID: 0x%x\n", headerId)
+				// fmt.Printf("[channel] Header ID: 0x%x\n", headerID)
 
 				read := uint16(0)
 				if c.onHeader != nil {
-					read = c.onHeader(c, headerId, dataReader)
+					read = c.onHeader(c, headerID, dataReader)
 				}
 
 				// Consume the remaining un-read data

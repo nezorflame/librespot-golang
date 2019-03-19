@@ -40,5 +40,3 @@ Requires:
     export client_secret=[Your client secret here]
   ````
 3. Start spot control with no arguments
-
-

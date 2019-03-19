@@ -20,7 +20,7 @@ import (
 )
 
 // BlobInfo is the structure holding authentication blob data. The blob is an encoded/encrypted byte array (encoded
-// as base64), holding the encryption keys, the deviceId, and the username.
+// as base64), holding the encryption keys, the deviceID, and the username.
 type BlobInfo struct {
 	Username    string
 	DecodedBlob string
@@ -46,7 +46,7 @@ func BlobFromFile(path string) (BlobInfo, error) {
 
 // NewBlobInfo creates a new BlobInfo structure with the blob data filled in DecodedBlob field
 func NewBlobInfo(blob64 string, client64 string,
-	keys crypto.PrivateKeys, deviceId string, username string) (BlobInfo, error) {
+	keys crypto.PrivateKeys, deviceID string, username string) (BlobInfo, error) {
 
 	partDecoded, err := decodeBlob(blob64, client64, keys)
 	if err != nil {
@@ -54,7 +54,7 @@ func NewBlobInfo(blob64 string, client64 string,
 	}
 
 	fullDecoded := decodeBlobSecondary(partDecoded, username,
-		deviceId)
+		deviceID)
 
 	return BlobInfo{
 		Username:    username,
@@ -63,8 +63,8 @@ func NewBlobInfo(blob64 string, client64 string,
 }
 
 // MakeAuthBlob builds an encoded blob in order to authenticate against Spotify services
-func (b *BlobInfo) MakeAuthBlob(deviceId string, client64 string, dhKeys crypto.PrivateKeys) (string, error) {
-	secret := sha1.Sum([]byte(deviceId))
+func (b *BlobInfo) MakeAuthBlob(deviceID string, client64 string, dhKeys crypto.PrivateKeys) (string, error) {
+	secret := sha1.Sum([]byte(deviceID))
 	key := blobKey(b.Username, secret[:])
 
 	blobBytes, err := base64.StdEncoding.DecodeString(b.DecodedBlob)
@@ -205,9 +205,9 @@ func decodeBlob(blob64 string, client64 string, keys crypto.PrivateKeys) (string
 	return string(encryptedPart), nil
 }
 
-func decodeBlobSecondary(blob64 string, username string, deviceId string) []byte {
+func decodeBlobSecondary(blob64 string, username string, deviceID string) []byte {
 	blob, _ := base64.StdEncoding.DecodeString(blob64)
-	secret := sha1.Sum([]byte(deviceId))
+	secret := sha1.Sum([]byte(deviceID))
 	key := blobKey(username, secret[:])
 
 	data := decryptBlob(blob, key)

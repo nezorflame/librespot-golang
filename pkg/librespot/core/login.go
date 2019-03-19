@@ -7,108 +7,110 @@ import (
 	"log"
 
 	"github.com/nezorflame/librespot-golang/pkg/librespot/connection"
+	"github.com/nezorflame/librespot-golang/pkg/librespot/crypto"
 	"github.com/nezorflame/librespot-golang/pkg/librespot/discovery"
+	"github.com/nezorflame/librespot-golang/pkg/librespot/mercury"
 	"github.com/nezorflame/librespot-golang/pkg/librespot/utils"
 	"github.com/nezorflame/librespot-golang/pkg/spotify"
 
 	"github.com/golang/protobuf/proto"
 )
 
-var Version = "master"
-var BuildID = "dev"
+const (
+	version = "master"
+	buildID = "dev"
+)
 
-// Login to Spotify using username and password
-func Login(username string, password string, deviceName string) (*Session, error) {
-	s, err := setupSession()
-	if err != nil {
-		return s, err
+// NewSession creates new instance of Session
+func NewSession() (*Session, error) {
+	session := &Session{
+		keys:               crypto.GenerateKeys(),
+		mercuryConstructor: mercury.CreateMercury,
+		shannonConstructor: crypto.CreateStream,
 	}
-
-	return s, s.loginSession(username, password, deviceName)
+	return session, session.doConnect()
 }
 
-func (s *Session) loginSession(username string, password string, deviceName string) error {
-	s.deviceId = utils.GenerateDeviceId(deviceName)
-	s.deviceName = deviceName
-
-	err := s.startConnection()
-	if err != nil {
+// Login allows to log into Spotify using username and password
+func (s *Session) Login(username, password, deviceName string) error {
+	if err := s.setDeviceInfoAndConnect(deviceName); err != nil {
 		return err
 	}
-	loginPacket := makeLoginPasswordPacket(username, password, s.deviceId)
+
+	loginPacket := makeLoginPasswordPacket(username, password, s.deviceID)
 	return s.doLogin(loginPacket, username)
 }
 
-// Login to Spotify using an existing authData blob
-func LoginSaved(username string, authData []byte, deviceName string) (*Session, error) {
-	s, err := setupSession()
-	if err != nil {
-		return s, err
-	}
-	s.deviceId = utils.GenerateDeviceId(deviceName)
-	s.deviceName = deviceName
-
-	err = s.startConnection()
-	if err != nil {
-		return s, err
+// LoginSaved allows to log into Spotify using an existing authData blob
+func (s *Session) LoginSaved(username string, authData []byte, deviceName string) error {
+	if err := s.setDeviceInfoAndConnect(deviceName); err != nil {
+		return err
 	}
 
-	packet := makeLoginBlobPacket(username, authData,
-		spotify.AuthenticationType_AUTHENTICATION_STORED_SPOTIFY_CREDENTIALS.Enum(), s.deviceId)
-	return s, s.doLogin(packet, username)
+	packet := makeLoginBlobPacket(
+		username,
+		authData,
+		spotify.AuthenticationType_AUTHENTICATION_STORED_SPOTIFY_CREDENTIALS.Enum(),
+		s.deviceID,
+	)
+	return s.doLogin(packet, username)
 }
 
-// Registers librespot as a Spotify Connect device via mdns. When user connects, logs on to Spotify and saves
-// credentials in file at cacheBlobPath. Once saved, the blob credentials allow the program to connect to other
+// LoginDiscovery registers librespot as a Spotify Connect device via mdns.
+// When user connects, logs on to Spotify and saves credentials in file at cacheBlobPath.
+// Once saved, the blob credentials allow the program to connect to other
 // Spotify Connect devices and control them.
-func LoginDiscovery(cacheBlobPath string, deviceName string) (*Session, error) {
-	deviceId := utils.GenerateDeviceId(deviceName)
-	disc := discovery.LoginFromConnect(cacheBlobPath, deviceId, deviceName)
-	return sessionFromDiscovery(disc)
+func (s *Session) LoginDiscovery(cacheBlobPath string, deviceName string) error {
+	deviceID := utils.GenerateDeviceID(deviceName)
+	disc := discovery.LoginFromConnect(cacheBlobPath, deviceID, deviceName)
+	return s.sessionFromDiscovery(disc)
 }
 
-// Login using an authentication blob through Spotify Connect discovery system, reading an existing blob data. To read
-// from a file, see LoginDiscoveryBlobFile.
-func LoginDiscoveryBlob(username string, blob string, deviceName string) (*Session, error) {
-	deviceId := utils.GenerateDeviceId(deviceName)
+// LoginDiscoveryBlob allows to login using an authentication blob through
+// Spotify Connect discovery system, reading an existing blob data.
+// To read from a file, see LoginDiscoveryBlobFile.
+func (s *Session) LoginDiscoveryBlob(username, blob, deviceName string) error {
+	deviceID := utils.GenerateDeviceID(deviceName)
 	disc := discovery.CreateFromBlob(utils.BlobInfo{
 		Username:    username,
 		DecodedBlob: blob,
-	}, "", deviceId, deviceName)
-	return sessionFromDiscovery(disc)
+	}, "", deviceID, deviceName)
+	return s.sessionFromDiscovery(disc)
 }
 
-// Login from credentials at cacheBlobPath previously saved by LoginDiscovery. Similar to LoginDiscoveryBlob, except
-// it reads it directly from a file.
-func LoginDiscoveryBlobFile(cacheBlobPath, deviceName string) (*Session, error) {
-	deviceId := utils.GenerateDeviceId(deviceName)
-	disc := discovery.CreateFromFile(cacheBlobPath, deviceId, deviceName)
-	return sessionFromDiscovery(disc)
+// LoginDiscoveryBlobFile allows to login from credentials at cacheBlobPath previously saved by LoginDiscovery.
+// Similar to LoginDiscoveryBlob, except it reads it directly from a file.
+func (s *Session) LoginDiscoveryBlobFile(cacheBlobPath, deviceName string) error {
+	deviceID := utils.GenerateDeviceID(deviceName)
+	disc := discovery.CreateFromFile(cacheBlobPath, deviceID, deviceName)
+	return s.sessionFromDiscovery(disc)
 }
 
-// Login to Spotify using the OAuth method
-func LoginOAuth(deviceName string, clientId string, clientSecret string) (*Session, error) {
-	token := getOAuthToken(clientId, clientSecret)
-	return loginOAuthToken(token.AccessToken, deviceName)
+// LoginOAuth allows to login to Spotify using the OAuth method
+func (s *Session) LoginOAuth(deviceName, clientID, clientSecret string) error {
+	token := getOAuthToken(clientID, clientSecret)
+	return s.loginOAuthToken(token.AccessToken, deviceName)
 }
 
-func loginOAuthToken(accessToken string, deviceName string) (*Session, error) {
-	s, err := setupSession()
-	if err != nil {
-		return s, err
+func (s *Session) loginOAuthToken(accessToken string, deviceName string) error {
+	if err := s.setDeviceInfoAndConnect(deviceName); err != nil {
+		return err
 	}
 
-	s.deviceId = utils.GenerateDeviceId(deviceName)
+	packet := makeLoginBlobPacket(
+		"",
+		[]byte(accessToken),
+		spotify.AuthenticationType_AUTHENTICATION_SPOTIFY_TOKEN.Enum(),
+		s.deviceID,
+	)
+	return s.doLogin(packet, "")
+}
+
+func (s *Session) setDeviceInfoAndConnect(deviceName string) error {
+	s.deviceID = utils.GenerateDeviceID(deviceName)
 	s.deviceName = deviceName
 
-	err = s.startConnection()
-	if err != nil {
-		return s, err
-	}
-
-	packet := makeLoginBlobPacket("", []byte(accessToken),
-		spotify.AuthenticationType_AUTHENTICATION_SPOTIFY_TOKEN.Enum(), s.deviceId)
-	return s, s.doLogin(packet, "")
+	return s.startConnection()
 }
 
 func (s *Session) doLogin(packet []byte, username string) error {
@@ -160,29 +162,38 @@ func (s *Session) handleLogin() (*spotify.APWelcome, error) {
 	}
 }
 
-func (s *Session) getLoginBlobPacket(blob utils.BlobInfo) []byte {
-	data, _ := base64.StdEncoding.DecodeString(blob.DecodedBlob)
+func (s *Session) getLoginBlobPacket(blob utils.BlobInfo) ([]byte, error) {
+	data, err := base64.StdEncoding.DecodeString(blob.DecodedBlob)
+	if err != nil {
+		return nil, err
+	}
 
 	buffer := bytes.NewBuffer(data)
-	buffer.ReadByte()
+	if _, err = buffer.ReadByte(); err != nil {
+		return nil, err
+	}
 	readBytes(buffer)
-	buffer.ReadByte()
+
+	if _, err = buffer.ReadByte(); err != nil {
+		return nil, err
+	}
 	authNum := readInt(buffer)
+
 	authType := spotify.AuthenticationType(authNum)
-	buffer.ReadByte()
+	if _, err = buffer.ReadByte(); err != nil {
+		return nil, err
+	}
 	authData := readBytes(buffer)
 
-	return makeLoginBlobPacket(blob.Username, authData, &authType, s.deviceId)
+	return makeLoginBlobPacket(blob.Username, authData, &authType, s.deviceID), nil
 }
 
-func makeLoginPasswordPacket(username string, password string, deviceId string) []byte {
-	return makeLoginBlobPacket(username, []byte(password),
-		spotify.AuthenticationType_AUTHENTICATION_USER_PASS.Enum(), deviceId)
+func makeLoginPasswordPacket(username, password, deviceID string) []byte {
+	return makeLoginBlobPacket(username, []byte(password), spotify.AuthenticationType_AUTHENTICATION_USER_PASS.Enum(), deviceID)
 }
 
-func makeLoginBlobPacket(username string, authData []byte,
-	authType *spotify.AuthenticationType, deviceId string) []byte {
-	versionString := "librespot-golang_" + Version + "_" + BuildID
+func makeLoginBlobPacket(username string, authData []byte, authType *spotify.AuthenticationType, deviceID string) []byte {
+	versionString := "librespot-golang_" + version + "_" + buildID
 
 	packet := &spotify.ClientResponseEncrypted{
 		LoginCredentials: &spotify.LoginCredentials{
@@ -194,7 +205,7 @@ func makeLoginBlobPacket(username string, authData []byte,
 			CpuFamily:               spotify.CpuFamily_CPU_UNKNOWN.Enum(),
 			Os:                      spotify.Os_OS_UNKNOWN.Enum(),
 			SystemInformationString: proto.String("librespot-golang"),
-			DeviceId:                proto.String(deviceId),
+			DeviceId:                proto.String(deviceID),
 		},
 		VersionString: proto.String(versionString),
 	}
@@ -203,5 +214,6 @@ func makeLoginBlobPacket(username string, authData []byte,
 	if err != nil {
 		log.Fatal("login marshaling error: ", err)
 	}
+
 	return packetData
 }

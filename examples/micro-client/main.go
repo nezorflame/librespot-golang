@@ -150,10 +150,10 @@ func printHelp() {
 	fmt.Println("help:                           show this help")
 }
 
-func funcTrack(session *core.Session, trackId string) {
-	fmt.Println("Loading track: ", trackId)
+func funcTrack(session *core.Session, trackID string) {
+	fmt.Println("Loading track: ", trackID)
 
-	track, err := session.Mercury().GetTrack(utils.Base62ToHex(trackId))
+	track, err := session.Mercury().GetTrack(utils.Base62ToHex(trackID))
 	if err != nil {
 		fmt.Println("Error loading track: ", err)
 		return
@@ -162,8 +162,8 @@ func funcTrack(session *core.Session, trackId string) {
 	fmt.Println("Track title: ", track.GetName())
 }
 
-func funcArtist(session *core.Session, artistId string) {
-	artist, err := session.Mercury().GetArtist(utils.Base62ToHex(artistId))
+func funcArtist(session *core.Session, artistID string) {
+	artist, err := session.Mercury().GetArtist(utils.Base62ToHex(artistID))
 	if err != nil {
 		fmt.Println("Error loading artist:", err)
 		return
@@ -196,8 +196,8 @@ func funcArtist(session *core.Session, artistId string) {
 
 }
 
-func funcAlbum(session *core.Session, albumId string) {
-	album, err := session.Mercury().GetAlbum(utils.Base62ToHex(albumId))
+func funcAlbum(session *core.Session, albumID string) {
+	album, err := session.Mercury().GetAlbum(utils.Base62ToHex(albumID))
 	if err != nil {
 		fmt.Println("Error loading album:", err)
 		return
@@ -288,11 +288,11 @@ func funcSearch(session *core.Session, keyword string) {
 	}
 }
 
-func funcPlay(session *core.Session, trackId string) {
-	fmt.Println("Loading track for play: ", trackId)
+func funcPlay(session *core.Session, trackID string) {
+	fmt.Println("Loading track for play: ", trackID)
 
 	// Get the track metadata: it holds information about which files and encodings are available
-	track, err := session.Mercury().GetTrack(utils.Base62ToHex(trackId))
+	track, err := session.Mercury().GetTrack(utils.Base62ToHex(trackID))
 	if err != nil {
 		fmt.Println("Error loading track: ", err)
 		return

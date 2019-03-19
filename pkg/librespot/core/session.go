@@ -42,9 +42,9 @@ type Session struct {
 	keys crypto.PrivateKeys
 
 	/// State and variables
-	// deviceId is the device identifier (computer name, Android serial number, ...) sent during auth to the Spotify
+	// deviceID is the device identifier (computer name, Android serial number, ...) sent during auth to the Spotify
 	// servers for this session
-	deviceId string
+	deviceID string
 	// deviceName is the device name (Android device model) sent during auth to the Spotify servers for this session
 	deviceName string
 	// username is the currently authenticated canonical username
@@ -75,8 +75,8 @@ func (s *Session) Username() string {
 	return s.username
 }
 
-func (s *Session) DeviceId() string {
-	return s.deviceId
+func (s *Session) DeviceID() string {
+	return s.deviceID
 }
 
 func (s *Session) ReusableAuthBlob() []byte {
@@ -145,44 +145,31 @@ func (s *Session) startConnection() error {
 	return nil
 }
 
-func setupSession() (*Session, error) {
-	session := &Session{
-		keys:               crypto.GenerateKeys(),
-		mercuryConstructor: mercury.CreateMercury,
-		shannonConstructor: crypto.CreateStream,
-	}
-	err := session.doConnect()
-
-	return session, err
-}
-
-func sessionFromDiscovery(d *discovery.Discovery) (*Session, error) {
-	s, err := setupSession()
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Session) sessionFromDiscovery(d *discovery.Discovery) error {
 	s.discovery = d
-	s.deviceId = d.DeviceId()
+	s.deviceID = d.DeviceID()
 	s.deviceName = d.DeviceName()
 
-	err = s.startConnection()
-	if err != nil {
-		return s, err
+	if err := s.startConnection(); err != nil {
+		return err
 	}
 
-	loginPacket := s.getLoginBlobPacket(d.LoginBlob())
-	return s, s.doLogin(loginPacket, d.LoginBlob().Username)
+	loginPacket, err := s.getLoginBlobPacket(d.LoginBlob())
+	if err != nil {
+		return err
+	}
+
+	return s.doLogin(loginPacket, d.LoginBlob().Username)
 }
 
 func (s *Session) doConnect() error {
-	apUrl, err := utils.APResolve()
+	apURL, err := utils.APResolve()
 	if err != nil {
 		log.Println("Failed to get ap url", err)
 		return err
 	}
 
-	s.tcpCon, err = net.Dial("tcp", apUrl)
+	s.tcpCon, err = net.Dial("tcp", apURL)
 	if err != nil {
 		log.Println("Failed to connect:", err)
 		return err
@@ -216,7 +203,7 @@ func (s *Session) doReconnect() error {
 	}
 
 	packet := makeLoginBlobPacket(s.username, s.reusableAuthBlob,
-		spotify.AuthenticationType_AUTHENTICATION_STORED_SPOTIFY_CREDENTIALS.Enum(), s.deviceId)
+		spotify.AuthenticationType_AUTHENTICATION_STORED_SPOTIFY_CREDENTIALS.Enum(), s.deviceID)
 	return s.doLogin(packet, s.username)
 }
 
@@ -322,7 +309,7 @@ func readInt(b *bytes.Buffer) uint32 {
 func readBytes(b *bytes.Buffer) []byte {
 	length := readInt(b)
 	data := make([]byte, length)
-	b.Read(data)
+	_, _ = b.Read(data)
 
 	return data
 }

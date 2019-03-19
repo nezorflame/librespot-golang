@@ -11,7 +11,7 @@ message RetryInfo {
   optional int32 max_retry = 0x2;
 }
 
-message Id {
+message ID {
   optional string uri = 0x1;
   optional int64 start_time = 0x2;
 }
@@ -42,7 +42,7 @@ message End {
 }
 
 message Event {
-  optional Id id = 0x1;
+  optional ID id = 0x1;
   optional Start start = 0x2;
   optional Seek seek = 0x3;
   optional Pause pause = 0x4;

@@ -158,7 +158,7 @@ message APLoginFailed {
 enum ErrorCode {
   ProtocolError = 0x0;
   TryAnotherAP = 0x2;
-  BadConnectionId = 0x5;
+  BadConnectionID = 0x5;
   TravelRestriction = 0x9;
   PremiumAccountRequired = 0xb;
   BadCredentials = 0xc;

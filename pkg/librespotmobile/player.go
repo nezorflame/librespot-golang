@@ -17,15 +17,15 @@ func createMobilePlayer(session *core.Session) *MobilePlayer {
 	}
 }
 
-func (p *MobilePlayer) LoadTrack(fileId []byte, format int, trackId []byte) (*MobileAudioFile, error) {
-	// Make a copy of the fileId and trackId byte arrays, as they may be freed/reused on the other end,
-	// causing the fileId and/or trackId to change abruptly when the player actually request chunks.
-	safeFileId := make([]byte, len(fileId))
-	safeTrackId := make([]byte, len(trackId))
-	copy(safeFileId, fileId)
-	copy(safeTrackId, trackId)
+func (p *MobilePlayer) LoadTrack(fileID []byte, format int, trackID []byte) (*MobileAudioFile, error) {
+	// Make a copy of the fileID and trackID byte arrays, as they may be freed/reused on the other end,
+	// causing the fileID and/or trackID to change abruptly when the player actually request chunks.
+	safeFileID := make([]byte, len(fileID))
+	safeTrackID := make([]byte, len(trackID))
+	copy(safeFileID, fileID)
+	copy(safeTrackID, trackID)
 
-	track, err := p.player.LoadTrackWithIdAndFormat(safeFileId, spotify.AudioFile_Format(format), safeTrackId)
+	track, err := p.player.LoadTrackWithIdAndFormat(safeFileID, spotify.AudioFile_Format(format), safeTrackID)
 	if err != nil {
 		return nil, err
 	}

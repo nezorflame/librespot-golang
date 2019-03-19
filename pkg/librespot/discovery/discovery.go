@@ -54,7 +54,7 @@ type Discovery struct {
 	keys       crypto.PrivateKeys
 	cachePath  string
 	loginBlob  utils.BlobInfo
-	deviceId   string
+	deviceID   string
 	deviceName string
 
 	mdnsServer  *mdns.Server
@@ -64,13 +64,13 @@ type Discovery struct {
 }
 
 // makeConnectGetInfo builds a connectGetInfo structure with the provided values
-func makeConnectGetInfo(deviceId string, deviceName string, publicKey string) connectGetInfo {
+func makeConnectGetInfo(deviceID string, deviceName string, publicKey string) connectGetInfo {
 	return connectGetInfo{
 		Status:           101,
 		StatusError:      "ERROR-OK",
 		SpotifyError:     0,
 		Version:          "1.3.0",
-		DeviceID:         deviceId,
+		DeviceID:         deviceID,
 		RemoteName:       deviceName,
 		ActiveUser:       "",
 		PublicKey:        publicKey,
@@ -83,18 +83,18 @@ func makeConnectGetInfo(deviceId string, deviceName string, publicKey string) co
 }
 
 func blobFromDiscovery(deviceName string) *utils.BlobInfo {
-	deviceId := utils.GenerateDeviceId(deviceName)
-	d := LoginFromConnect("", deviceId, deviceName)
+	deviceID := utils.GenerateDeviceID(deviceName)
+	d := LoginFromConnect("", deviceID, deviceName)
 	return &d.loginBlob
 }
 
 // Advertises a Spotify service via mdns. It waits for the user to connect to 'librespot' device, extracts login data
 // and returns the resulting login BlobInfo.
-func LoginFromConnect(cachePath string, deviceId string, deviceName string) *Discovery {
+func LoginFromConnect(cachePath string, deviceID string, deviceName string) *Discovery {
 	d := Discovery{
 		keys:       crypto.GenerateKeys(),
 		cachePath:  cachePath,
-		deviceId:   deviceId,
+		deviceID:   deviceID,
 		deviceName: deviceName,
 	}
 
@@ -113,11 +113,11 @@ func LoginFromConnect(cachePath string, deviceId string, deviceName string) *Dis
 	return &d
 }
 
-func CreateFromBlob(blob utils.BlobInfo, cachePath, deviceId string, deviceName string) *Discovery {
+func CreateFromBlob(blob utils.BlobInfo, cachePath, deviceID string, deviceName string) *Discovery {
 	d := Discovery{
 		keys:       crypto.GenerateKeys(),
 		cachePath:  cachePath,
-		deviceId:   deviceId,
+		deviceID:   deviceID,
 		loginBlob:  blob,
 		deviceName: deviceName,
 	}
@@ -127,17 +127,17 @@ func CreateFromBlob(blob utils.BlobInfo, cachePath, deviceId string, deviceName 
 	return &d
 }
 
-func CreateFromFile(cachePath, deviceId string, deviceName string) *Discovery {
+func CreateFromFile(cachePath, deviceID string, deviceName string) *Discovery {
 	blob, err := utils.BlobFromFile(cachePath)
 	if err != nil {
 		log.Fatal("failed to get blob from file")
 	}
 
-	return CreateFromBlob(blob, cachePath, deviceId, deviceName)
+	return CreateFromBlob(blob, cachePath, deviceID, deviceName)
 }
 
-func (d *Discovery) DeviceId() string {
-	return d.deviceId
+func (d *Discovery) DeviceID() string {
+	return d.deviceID
 }
 
 func (d *Discovery) DeviceName() string {
@@ -196,13 +196,12 @@ func (d *Discovery) ConnectToDevice(address string) {
 	fmt.Println("resposne", resp)
 
 	client64 := base64.StdEncoding.EncodeToString(d.keys.PubKey())
-	blob, err := d.loginBlob.MakeAuthBlob(info.DeviceID,
-		info.PublicKey, d.keys)
+	blob, err := d.loginBlob.MakeAuthBlob(info.DeviceID, info.PublicKey, d.keys)
 	if err != nil {
 		panic("bad blob")
 	}
 
-	body := makeAddUserRequest(d.loginBlob.Username, blob, client64, d.deviceId, d.deviceName)
+	body := makeAddUserRequest(d.loginBlob.Username, blob, client64, d.deviceID, d.deviceName)
 	resp, err = http.PostForm(address, body)
 	defer resp.Body.Close()
 	decoder = json.NewDecoder(resp.Body)
@@ -212,13 +211,13 @@ func (d *Discovery) ConnectToDevice(address string) {
 	fmt.Println("got", f, resp, err)
 }
 
-func makeAddUserRequest(username string, blob string, key string, deviceId string, deviceName string) url.Values {
+func makeAddUserRequest(username string, blob string, key string, deviceID string, deviceName string) url.Values {
 	v := url.Values{}
 	v.Set("action", "addUser")
 	v.Add("userName", username)
 	v.Add("blob", blob)
 	v.Add("clientKey", key)
-	v.Add("deviceId", deviceId)
+	v.Add("deviceId", deviceID)
 	v.Add("deviceName", deviceName)
 	return v
 }
@@ -248,7 +247,7 @@ func (d *Discovery) handleAddUser(r *http.Request) error {
 	}
 
 	blob, err := utils.NewBlobInfo(blob64, client64, d.keys,
-		d.deviceId, username)
+		d.deviceID, username)
 	if err != nil {
 		return errors.New("failed to decode blob")
 	}
@@ -270,7 +269,7 @@ func (d *Discovery) startHttp(done chan int, l net.Listener) {
 		switch {
 		case "connectGetInfo" == action || "resetUsers" == action:
 			client64 := base64.StdEncoding.EncodeToString(d.keys.PubKey())
-			info := makeConnectGetInfo(d.deviceId, d.deviceName, client64)
+			info := makeConnectGetInfo(d.deviceID, d.deviceName, client64)
 
 			js, err := json.Marshal(info)
 			if err != nil {

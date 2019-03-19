@@ -8,9 +8,9 @@ import (
 
 // PlainConnection represents an unencrypted connection to a Spotify AP
 type PlainConnection struct {
-	Writer io.Writer
-	Reader io.Reader
-	mutex  *sync.Mutex
+	io.Reader
+	io.Writer
+	mtx sync.Mutex
 }
 
 func makePacketPrefix(prefix []byte, data []byte) []byte {
@@ -23,35 +23,37 @@ func makePacketPrefix(prefix []byte, data []byte) []byte {
 	return append(buf, data...)
 }
 
+// MakePlainConnection creates new PlainConnection
 func MakePlainConnection(reader io.Reader, writer io.Writer) PlainConnection {
 	return PlainConnection{
 		Reader: reader,
 		Writer: writer,
-		mutex:  &sync.Mutex{},
 	}
 }
 
-func (p *PlainConnection) SendPrefixPacket(prefix []byte, data []byte) (packet []byte, err error) {
-	packet = makePacketPrefix(prefix, data)
+// SendPrefixPacket sends new prefix packet with data
+func (p *PlainConnection) SendPrefixPacket(prefix, data []byte) ([]byte, error) {
+	packet := makePacketPrefix(prefix, data)
 
-	p.mutex.Lock()
-	_, err = p.Writer.Write(packet)
-	p.mutex.Unlock()
+	p.mtx.Lock()
+	_, err := p.Write(packet)
+	p.mtx.Unlock()
 
-	return
+	return packet, err
 }
 
-func (p *PlainConnection) RecvPacket() (buf []byte, err error) {
+// RecvPacket receives a packet
+func (p *PlainConnection) RecvPacket() ([]byte, error) {
 	var size uint32
-	err = binary.Read(p.Reader, binary.BigEndian, &size)
-	if err != nil {
-		return
+	if err := binary.Read(p, binary.BigEndian, &size); err != nil {
+		return nil, err
 	}
-	buf = make([]byte, size)
+
+	buf := make([]byte, size)
 	binary.BigEndian.PutUint32(buf, size)
-	_, err = io.ReadFull(p.Reader, buf[4:])
-	if err != nil {
-		return
+	if _, err := io.ReadFull(p, buf[4:]); err != nil {
+		return nil, err
 	}
+
 	return buf, nil
 }

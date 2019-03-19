@@ -74,7 +74,7 @@ func (c *Controller) LoadTrack(ident string, gids []string) error {
 
 	frame := &spotify.Frame{
 		Version:         proto.Uint32(1),
-		Ident:           proto.String(c.session.DeviceId()),
+		Ident:           proto.String(c.session.DeviceID()),
 		ProtocolVersion: proto.String("2.0.0"),
 		SeqNr:           proto.Uint32(c.seqNr),
 		Typ:             spotify.MessageType_kMessageTypeLoad.Enum(),
@@ -106,7 +106,7 @@ func (c *Controller) SendVolume(recipient string, volume int) error {
 	messageType := spotify.MessageType_kMessageTypeVolume
 	frame := &spotify.Frame{
 		Version:         proto.Uint32(1),
-		Ident:           proto.String(c.session.DeviceId()),
+		Ident:           proto.String(c.session.DeviceID()),
 		ProtocolVersion: proto.String("2.0.0"),
 		SeqNr:           proto.Uint32(c.seqNr),
 		Typ:             &messageType,
@@ -184,10 +184,10 @@ func (c *Controller) sendFrame(frame *spotify.Frame) error {
 }
 
 func (c *Controller) sendCmd(recipient []string, messageType spotify.MessageType) error {
-	c.seqNr += 1
+	c.seqNr++
 	frame := &spotify.Frame{
 		Version:         proto.Uint32(1),
-		Ident:           proto.String(c.session.DeviceId()),
+		Ident:           proto.String(c.session.DeviceID()),
 		ProtocolVersion: proto.String("2.0.0"),
 		SeqNr:           proto.Uint32(c.seqNr),
 		Typ:             &messageType,

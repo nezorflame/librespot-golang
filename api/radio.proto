@@ -5,7 +5,7 @@ message RadioRequest {
   repeated string uris = 0x1;
   optional int32 salt = 0x2;
   optional int32 length = 0x4;
-  optional string stationId = 0x5;
+  optional string stationID = 0x5;
   repeated string lastTracks = 0x6;
 }
 

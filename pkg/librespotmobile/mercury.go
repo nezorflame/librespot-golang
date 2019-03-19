@@ -66,8 +66,8 @@ func (m *MobileMercury) GetRootPlaylist(username string) (string, error) {
 	return marshalJson(spt), nil
 }
 
-func (m *MobileMercury) GetToken(clientId string, scopes string) (string, error) {
-	spt, err := m.mercury.GetToken(clientId, scopes)
+func (m *MobileMercury) GetToken(clientID string, scopes string) (string, error) {
+	spt, err := m.mercury.GetToken(clientID, scopes)
 	if err != nil {
 		return "", err
 	}

@@ -55,8 +55,8 @@ func (m *Client) GetPlaylist(id string) (*spotify.SelectedListContent, error) {
 	return result, err
 }
 
-func (m *Client) GetToken(clientId string, scopes string) (*metadata.Token, error) {
-	uri := fmt.Sprintf("hm://keymaster/token/authenticated?client_id=%s&scope=%s", url.QueryEscape(clientId),
+func (m *Client) GetToken(clientID string, scopes string) (*metadata.Token, error) {
+	uri := fmt.Sprintf("hm://keymaster/token/authenticated?client_id=%s&scope=%s", url.QueryEscape(clientID),
 		url.QueryEscape(scopes))
 
 	token := &metadata.Token{}

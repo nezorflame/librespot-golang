@@ -81,7 +81,7 @@ type TopRecommendation struct{}
 
 type SearchResponse struct {
 	Results         SearchResult `json:"results"`
-	RequestId       string       `json:"requestId"`
+	RequestID       string       `json:"requestId"`
 	CategoriesOrder []string     `json:"categoriesOrder"`
 }
 

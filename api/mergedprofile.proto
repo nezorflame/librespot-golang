@@ -1,0 +1,9 @@
+syntax = "proto2";
+package spotify;
+
+message MergedProfileRequest {}
+
+message MergedProfileReply {
+  optional string username = 0x1;
+  optional string artistid = 0x2;
+}
